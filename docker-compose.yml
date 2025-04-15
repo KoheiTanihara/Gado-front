@@ -1,0 +1,19 @@
+# docker-compose.yml
+version: '3.8'
+
+services:
+  app:
+    # コンテナ名をプロジェクトに合わせて変更 (任意)
+    container_name: gado-front-dev 
+    build: .
+    ports:
+      # ホストの 3000番ポートをコンテナの 8080番ポートに繋ぐ
+      - "3000:8080" 
+    volumes:
+      # ローカルのソースコードをコンテナにマウント (ホットリロードのため)
+      - .:/app
+      # コンテナ内の node_modules を使う (ローカルの node_modules を上書きしない)
+      - /app/node_modules 
+    # コンテナを起動し続けるための設定 (通常はCMDがあるので不要な場合も多い)
+    # stdin_open: true
+    # tty: true
