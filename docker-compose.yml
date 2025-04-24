@@ -1,19 +1,65 @@
-# docker-compose.yml
 version: '3.8'
 
 services:
-  app:
-    # コンテナ名をプロジェクトに合わせて変更 (任意)
-    container_name: gado-front-dev 
-    build: .
+  # フロントエンド
+  frontend:
+    container_name: gado-front
+    build:
+      context: .
+      target: development-stage  # 開発用ステージを使用
+      dockerfile: Dockerfile
     ports:
-      # ホストの 3000番ポートをコンテナの 8080番ポートに繋ぐ
-      - "3000:8080" 
+      - "8080:8080"
     volumes:
-      # ローカルのソースコードをコンテナにマウント (ホットリロードのため)
       - .:/app
-      # コンテナ内の node_modules を使う (ローカルの node_modules を上書きしない)
-      - /app/node_modules 
-    # コンテナを起動し続けるための設定 (通常はCMDがあるので不要な場合も多い)
-    # stdin_open: true
-    # tty: true
+      - /app/node_modules
+    environment:
+      - NODE_ENV=development
+      - VUE_APP_API_URL=http://localhost:8000
+    depends_on:
+      - backend
+    networks:
+      - app-network
+
+  # バックエンド（Ptodo-bプロジェクト）
+  backend:
+    container_name: ptodo-backend
+    build: ../Ptodo-b
+    ports:
+      - "8000:8000"
+    volumes:
+      - ../Ptodo-b:/app
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      - DATABASE_URL=mysql+pymysql://root:password@db:3306/ptodo
+      - SECRET_KEY=${SECRET_KEY:-your_default_secret_key}
+    networks:
+      - app-network
+
+  # データベース
+  db:
+    container_name: ptodo-db
+    image: mysql:8.0
+    ports:
+      - "3306:3306"
+    environment:
+      - MYSQL_ROOT_PASSWORD=password
+      - MYSQL_DATABASE=ptodo
+    volumes:
+      - db_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-ppassword"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - app-network
+
+networks:
+  app-network:
+    driver: bridge
+
+volumes:
+  db_data:

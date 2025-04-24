@@ -1,26 +1,60 @@
 <template>
-  <img alt="Vue logo" src="./assets/logo.png">
-  <HelloWorld msg="Welcome to Your Vue.js App"/>
+  <q-layout view="lHh Lpr lFf">
+    <q-header elevated class="bg-primary">
+      <q-toolbar>
+        <q-toolbar-title>
+          Ptodo - タスク管理アプリ
+        </q-toolbar-title>
+        
+        <div v-if="isLoggedIn">
+          <q-btn flat @click="logout">
+            ログアウト
+          </q-btn>
+        </div>
+      </q-toolbar>
+    </q-header>
+
+    <q-page-container>
+      <router-view />
+    </q-page-container>
+  </q-layout>
 </template>
 
 <script>
-import HelloWorld from './components/HelloWorld.vue'
+import { defineComponent, computed } from 'vue'
+import { useRouter } from 'vue-router'
 
-export default {
+export default defineComponent({
   name: 'App',
-  components: {
-    HelloWorld
+  setup() {
+    const router = useRouter()
+    
+    const isLoggedIn = computed(() => {
+      return !!localStorage.getItem('token')
+    })
+    
+    const logout = () => {
+      localStorage.removeItem('token')
+      localStorage.removeItem('username')
+      router.push('/login')
+    }
+    
+    return {
+      isLoggedIn,
+      logout
+    }
   }
-}
+})
 </script>
 
 <style>
-#app {
-  font-family: Avenir, Helvetica, Arial, sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  text-align: center;
-  color: #2c3e50;
-  margin-top: 60px;
+/* グローバルスタイルを設定 */
+body {
+  font-family: 'Roboto', sans-serif;
+}
+
+.q-page-container {
+  background-color: #f8f9fa;
+  min-height: 100vh;
 }
 </style>
