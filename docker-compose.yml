@@ -1,4 +1,4 @@
-version: '3.8'
+version: '3.8' # version は残しても削除してもOK
 
 services:
   # フロントエンド
@@ -9,57 +9,20 @@ services:
       target: development-stage  # 開発用ステージを使用
       dockerfile: Dockerfile
     ports:
-      - "8080:8080"
+      - "8080:8080" # ホストの8080をコンテナの8080にマッピング
     volumes:
-      - .:/app
-      - /app/node_modules
+      - .:/app          # ソースコードをマウント
+      - /app/node_modules # node_modulesはマウント対象外 (コンテナ内のものを使う)
     environment:
       - NODE_ENV=development
+      # VUE_APP_API_URLは、ブラウザからアクセスするURLなので localhost:8000 でOK
       - VUE_APP_API_URL=http://localhost:8000
-    depends_on:
-      - backend
-    networks:
-      - app-network
+    # depends_on: backend # 削除
+    networks: # ネットワーク定義も削除（デフォルトネットワークで十分な場合が多い）
+      - app-network # 削除しても良いかもしれないが、残す場合はnetworksセクションも残す
 
-  # バックエンド（Ptodo-bプロジェクト）
-  backend:
-    container_name: ptodo-backend
-    build: ../Ptodo-b
-    ports:
-      - "8000:8000"
-    volumes:
-      - ../Ptodo-b:/app
-    depends_on:
-      db:
-        condition: service_healthy
-    environment:
-      - DATABASE_URL=mysql+pymysql://root:password@db:3306/ptodo
-      - SECRET_KEY=${SECRET_KEY:-your_default_secret_key}
-    networks:
-      - app-network
-
-  # データベース
-  db:
-    container_name: ptodo-db
-    image: mysql:8.0
-    ports:
-      - "3306:3306"
-    environment:
-      - MYSQL_ROOT_PASSWORD=password
-      - MYSQL_DATABASE=ptodo
-    volumes:
-      - db_data:/var/lib/mysql
-    healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-ppassword"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-    networks:
-      - app-network
-
-networks:
+networks: # 上でfrontendのnetworksを削除した場合は、このセクションも削除
   app-network:
     driver: bridge
 
-volumes:
-  db_data:
+# volumes: db_data: # dbサービスを削除したので、これも削除
